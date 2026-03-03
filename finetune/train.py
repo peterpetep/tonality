@@ -1,12 +1,20 @@
+from pathlib import Path
 import torch
 from transformers import AutoTokenizer, Trainer, TrainingArguments
 from datasets import Dataset, DatasetDict
 
 from finetune.regression_model import RegressionModel, compute_metrics, data_collator
+from safetensors.torch import load_file
 
+existing_model = "./deberta-MERGE-tuned-prod"
+emod_path = Path(existing_model)
 
 model_name = "microsoft/deberta-v3-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+if emod_path.exists():
+    tokenizer = AutoTokenizer.from_pretrained(existing_model)
+else:
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 dataset = DatasetDict.load_from_disk("finetune/MERGE_PREPPED")
 
@@ -21,6 +29,10 @@ tokenized_dataset.set_format(type='torch', columns=['input_ids', 'attention_mask
 
 model = RegressionModel(model_name)
 
+if emod_path.exists():
+    weights = load_file(f"{existing_model}/model.safetensors")
+    model.load_state_dict(weights)
+
 model.to(torch.float32)
 model.to("mps")
 
@@ -33,7 +45,6 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=8,
     num_train_epochs=5,
     weight_decay=0.01,
-    logging_dir='./logs',
     logging_steps=50,
     load_best_model_at_end=True,
     metric_for_best_model="mse",
