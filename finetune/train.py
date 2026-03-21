@@ -6,6 +6,8 @@ from datasets import Dataset, DatasetDict
 from finetune.regression_model import RegressionModel, compute_metrics, data_collator
 from safetensors.torch import load_file
 
+from hotfixtokenizer import hotfixtokenizer
+
 existing_model = "./deberta-MERGE-tuned-prod"
 emod_path = Path(existing_model)
 
@@ -15,6 +17,8 @@ if emod_path.exists():
     tokenizer = AutoTokenizer.from_pretrained(existing_model)
 else:
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+hotfixtokenizer(tokenizer)
 
 dataset = DatasetDict.load_from_disk("finetune/MERGE_PREPPED")
 
@@ -49,7 +53,7 @@ training_args = TrainingArguments(
     load_best_model_at_end=True,
     metric_for_best_model="mse",
     greater_is_better=False,
-    warmup_steps=500,
+    warmup_steps=150,
     report_to="tensorboard",
     fp16=False,
     remove_unused_columns=False,
@@ -68,6 +72,6 @@ trainer.train()
 
 
 trainer.save_model("./deberta-MERGE-tuned-prod")
-tokenizer.save_pretrained(".//deberta-MERGE-tuned-prod")
+tokenizer.save_pretrained("./deberta-MERGE-tuned-prod")
 
 print("done")

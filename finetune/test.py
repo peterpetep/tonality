@@ -6,12 +6,15 @@ from datasets import DatasetDict
 from finetune.regression_model import RegressionModel
 from safetensors.torch import load_file
 
+from hotfixtokenizer import hotfixtokenizer
+
 
 model_path = "./deberta-MERGE-tuned-prod"
 dataset_path = "finetune/MERGE_PREPPED"
 device = "mps" if torch.backends.mps.is_available() else "cpu"
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
+hotfixtokenizer(tokenizer)
 model = RegressionModel("microsoft/deberta-v3-base")
 weights = load_file(f"{model_path}/model.safetensors")
 model.load_state_dict(weights)
