@@ -2,3 +2,5 @@
 */MERGE_Lyrics_Balanced
 */MERGE_PREPPED
 __pycache__
+*.safetensors
+*.bin
